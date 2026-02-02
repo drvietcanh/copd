@@ -452,9 +452,9 @@ const callApiRoute = async (
       
       // Provide helpful messages for common status codes
       if (response.status === 401) {
-        throw new Error("API Key không hợp lệ trên server. Vui lòng kiểm tra GEMINI_API_KEY trên Vercel hoặc nhập API Key cá nhân trong phần Cài đặt.");
+        throw new Error("API Key không hợp lệ trên server. Vui lòng kiểm tra biến môi trường GEMINI_API_KEY (Vercel/Netlify) hoặc dùng chế độ thủ công trong phần Cài đặt.");
       } else if (response.status === 500) {
-        throw new Error(`Lỗi server: ${errorMessage}. Vui lòng kiểm tra logs trên Vercel hoặc thử lại sau.`);
+        throw new Error(`Lỗi server: ${errorMessage}. Vui lòng kiểm tra logs trên nền tảng deploy (Vercel/Netlify) hoặc thử lại sau.`);
       } else if (response.status === 429) {
         throw new Error("Đã vượt quá giới hạn sử dụng. Vui lòng thử lại sau vài phút.");
       }
