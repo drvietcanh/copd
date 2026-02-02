@@ -396,7 +396,7 @@ const App: React.FC = () => {
           !analysis ? (
             <div className="animate-fade-in">
                <div className="mb-8 text-center max-w-2xl mx-auto">
-                 <h2 className="text-3xl font-bold text-slate-800 mb-3">Đánh giá Bệnh nhân</h2>
+                 <h2 className="text-3xl font-bold text-slate-800 mb-3">Đánh giá Bệnh nhân COPD</h2>
                  <p className="text-slate-500 mb-4">
                    Nhập các thông số lâm sàng bên dưới để tạo báo cáo đánh giá tuân thủ hướng dẫn GOLD 2026.
                    Mọi dữ liệu được xử lý bảo mật qua Google Gemini.
