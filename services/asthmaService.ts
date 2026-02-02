@@ -23,6 +23,9 @@ export interface AsthmaData {
   hospitalizationsLast12m: string; // number
 
   // Lung function
+  fev1L: string;
+  fvcL: string;
+  fev1FvcRatio: string;
   fev1Percent: string; // % predicted
   postBdReversibility: boolean;
 
@@ -53,6 +56,9 @@ export const initialAsthmaData: AsthmaData = {
   exacerbationsLast12m: '0',
   hospitalizationsLast12m: '0',
 
+  fev1L: '',
+  fvcL: '',
+  fev1FvcRatio: '',
   fev1Percent: '',
   postBdReversibility: false,
 
@@ -94,6 +100,9 @@ NGUY CƠ:
 - Nhập viện 12 tháng: ${sanitize(data.hospitalizationsLast12m || '0')}
 
 CHỨC NĂNG HÔ HẤP:
+- FEV1 (L): ${sanitize(data.fev1L || 'N/A')}
+- FVC (L): ${sanitize(data.fvcL || 'N/A')}
+- FEV1/FVC: ${sanitize(data.fev1FvcRatio || 'N/A')}
 - FEV1% dự đoán: ${sanitize(data.fev1Percent || 'N/A')}%
 - Reversibility sau giãn PQ: ${data.postBdReversibility ? 'Có' : 'Không/Chưa rõ'}
 

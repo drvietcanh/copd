@@ -1,7 +1,8 @@
 import React, { useMemo, useState } from 'react';
-import { Activity, Stethoscope, FileText, AlertTriangle, Sparkles } from 'lucide-react';
+import { Activity, Stethoscope, FileText, AlertTriangle, Sparkles, Calculator } from 'lucide-react';
 import { AsthmaData, buildAsthmaPromptForAiStudio, computeActScore, initialAsthmaData } from '../services/asthmaService';
 import { Gender } from '../types';
+import { calculateFev1FvcRatio } from '../services/calculationService';
 
 interface AsthmaAssessmentProps {
   manualMode: boolean;
@@ -317,6 +318,69 @@ const AsthmaAssessment: React.FC<AsthmaAssessmentProps> = ({
                 className="w-full px-3 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none"
               />
             </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1 flex items-center gap-2">
+                FEV1 (L)
+                <span className="text-xs text-slate-400 font-normal">(Tự động tính FEV1/FVC)</span>
+              </label>
+              <input
+                type="number"
+                step="0.01"
+                value={data.fev1L}
+                onChange={(e) => {
+                  const fev1L = e.target.value;
+                  const ratio = calculateFev1FvcRatio(fev1L, data.fvcL || '');
+                  handleChange('fev1L', fev1L);
+                  if (ratio) handleChange('fev1FvcRatio', ratio);
+                }}
+                className="w-full px-3 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1 flex items-center gap-2">
+                FVC (L)
+                <span className="text-xs text-slate-400 font-normal">(Tự động tính FEV1/FVC)</span>
+              </label>
+              <input
+                type="number"
+                step="0.01"
+                value={data.fvcL}
+                onChange={(e) => {
+                  const fvcL = e.target.value;
+                  const ratio = calculateFev1FvcRatio(data.fev1L || '', fvcL);
+                  handleChange('fvcL', fvcL);
+                  if (ratio) handleChange('fev1FvcRatio', ratio);
+                }}
+                className="w-full px-3 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1 flex items-center gap-2">
+                Chỉ số FEV1/FVC
+                {data.fev1L && data.fvcL ? (
+                  <span className="text-xs text-emerald-600 font-medium flex items-center gap-1">
+                    <Calculator className="w-3 h-3" />
+                    Tự động tính
+                  </span>
+                ) : (
+                  <span className="text-xs text-slate-400 font-normal">
+                    (Nhập FEV1 và FVC để tự động tính)
+                  </span>
+                )}
+              </label>
+              <input
+                type="number"
+                step="0.01"
+                max="1"
+                value={data.fev1FvcRatio}
+                readOnly={!!(data.fev1L && data.fvcL)}
+                className={`w-full px-3 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none ${
+                  data.fev1L && data.fvcL
+                    ? 'bg-emerald-50 border-emerald-200 text-emerald-700 cursor-not-allowed font-medium'
+                    : 'bg-white'
+                }`}
+              />
+            </div>
             <div className="flex items-center gap-3">
               <input
                 type="checkbox"
@@ -326,6 +390,14 @@ const AsthmaAssessment: React.FC<AsthmaAssessmentProps> = ({
               />
               <span className="text-sm font-medium text-slate-700">Có reversibility sau giãn PQ</span>
             </div>
+            {data.postBdReversibility && (
+              <div className="md:col-span-2">
+                <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-50 border border-emerald-200 text-xs font-semibold text-emerald-800">
+                  <Sparkles className="w-3 h-3" />
+                  Variable airflow limitation (đáp ứng giãn phế quản rõ)
+                </div>
+              </div>
+            )}
             <div className="md:col-span-2">
               <label className="block text-sm font-medium text-slate-700 mb-1">Điều trị hiện tại</label>
               <textarea
