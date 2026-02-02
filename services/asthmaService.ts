@@ -81,6 +81,70 @@ export const computeActScore = (data: AsthmaData): number | null => {
   return sum;
 };
 
+export type GinaStep = 1 | 2 | 3 | 4 | 5;
+
+export interface GinaStepRecommendation {
+  actScore: number | null;
+  exacerbations: number;
+  hospitalizations: number;
+  currentStep: GinaStep;
+  nextStep: GinaStep | null;
+  currentSummary: string;
+  nextSummary: string | null;
+}
+
+const GINA_STEP_TEXT: Record<GinaStep, string> = {
+  1: 'Step 1: Sử dụng ICS–formoterol liều thấp khi cần (không dùng SABA đơn trị).',
+  2: 'Step 2: Điều trị duy trì ICS liều thấp hàng ngày hoặc ICS–formoterol liều thấp khi cần.',
+  3: 'Step 3: Điều trị duy trì ICS–LABA liều thấp.',
+  4: 'Step 4: ICS–LABA liều trung bình/cao, cân nhắc thêm LAMA.',
+  5: 'Step 5: Chuyển chuyên khoa, cân nhắc sinh học (anti-IgE, anti-IL5, anti-IL4R) và tối ưu hóa điều trị phối hợp.',
+};
+
+export const getGinaStepRecommendation = (data: AsthmaData): GinaStepRecommendation => {
+  const act = computeActScore(data);
+  const exac = parseFloat(data.exacerbationsLast12m || '0');
+  const hosp = parseFloat(data.hospitalizationsLast12m || '0');
+
+  // Baseline: nếu chưa có ACT, giả định Step 1
+  let currentStep: GinaStep = 1;
+
+  if (act !== null) {
+    if (act >= 20 && exac === 0 && hosp === 0) {
+      currentStep = 1;
+    } else if (act >= 20 && (exac > 0 || hosp > 0)) {
+      // Kiểm soát tốt nhưng có đợt cấp → tăng bậc controller
+      currentStep = 3;
+    } else if (act >= 16 && act <= 19) {
+      currentStep = 2;
+    } else if (act <= 15) {
+      currentStep = 3;
+    }
+  }
+
+  // Nguy cơ cao (nhiều đợt cấp / nhập viện) → Step 4–5
+  if (exac >= 2 || hosp >= 1) {
+    currentStep = currentStep < 4 ? 4 : currentStep;
+  }
+
+  // Gợi ý bước tiếp theo (nếu chưa kiểm soát tối ưu)
+  let nextStep: GinaStep | null = null;
+  if (currentStep === 1 && act !== null && act < 20) nextStep = 2;
+  else if (currentStep === 2 && act !== null && act < 20) nextStep = 3;
+  else if (currentStep === 3 && (act !== null && act <= 15 || exac >= 2 || hosp >= 1)) nextStep = 4;
+  else if (currentStep === 4 && (act !== null && act <= 15 || exac >= 2 || hosp >= 1)) nextStep = 5;
+
+  return {
+    actScore: act,
+    exacerbations: isNaN(exac) ? 0 : exac,
+    hospitalizations: isNaN(hosp) ? 0 : hosp,
+    currentStep,
+    nextStep,
+    currentSummary: GINA_STEP_TEXT[currentStep],
+    nextSummary: nextStep ? GINA_STEP_TEXT[nextStep] : null,
+  };
+};
+
 const buildAsthmaPatientDescription = (data: AsthmaData) => {
   const actScore = computeActScore(data);
   return sanitize(`

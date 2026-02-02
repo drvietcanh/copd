@@ -1,6 +1,12 @@
 import React, { useMemo, useState } from 'react';
 import { Activity, Stethoscope, FileText, AlertTriangle, Sparkles, Calculator } from 'lucide-react';
-import { AsthmaData, buildAsthmaPromptForAiStudio, computeActScore, initialAsthmaData } from '../services/asthmaService';
+import {
+  AsthmaData,
+  buildAsthmaPromptForAiStudio,
+  computeActScore,
+  getGinaStepRecommendation,
+  initialAsthmaData,
+} from '../services/asthmaService';
 import { Gender } from '../types';
 import { calculateFev1FvcRatio } from '../services/calculationService';
 
@@ -97,6 +103,8 @@ const AsthmaAssessment: React.FC<AsthmaAssessmentProps> = ({
     },
   ];
 
+  const ginaStep = useMemo(() => getGinaStepRecommendation(data), [data]);
+
   const handleAnalyze = async () => {
     onSetError(null);
     if (manualMode) {
@@ -129,20 +137,32 @@ const AsthmaAssessment: React.FC<AsthmaAssessmentProps> = ({
         <p className="text-slate-500 mb-4">
           Nhập dữ liệu cơ bản để tạo báo cáo đánh giá Hen. (COPD/GOLD sẽ được ẩn khi chọn Asthma.)
         </p>
-        {quickSummary && (
-          <div
-            className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-full border text-sm font-medium ${
-              quickSummary.tone === 'emerald'
-                ? 'bg-emerald-50 text-emerald-700 border-emerald-100'
-                : quickSummary.tone === 'amber'
-                ? 'bg-amber-50 text-amber-700 border-amber-100'
-                : 'bg-red-50 text-red-700 border-red-100'
-            }`}
-          >
-            <AlertTriangle className="w-4 h-4" />
-            {quickSummary.label}
+        <div className="flex flex-col items-center gap-2">
+          {quickSummary && (
+            <div
+              className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-full border text-sm font-medium ${
+                quickSummary.tone === 'emerald'
+                  ? 'bg-emerald-50 text-emerald-700 border-emerald-100'
+                  : quickSummary.tone === 'amber'
+                  ? 'bg-amber-50 text-amber-700 border-amber-100'
+                  : 'bg-red-50 text-red-700 border-red-100'
+              }`}
+            >
+              <AlertTriangle className="w-4 h-4" />
+              {quickSummary.label}
+            </div>
+          )}
+          <div className="flex flex-wrap justify-center gap-2 text-xs text-slate-500 mt-1">
+            <span className="px-2 py-1 rounded-full bg-slate-100 text-slate-700 font-semibold">
+              GINA {ginaStep.currentStep}
+            </span>
+            {ginaStep.nextStep && (
+              <span className="px-2 py-1 rounded-full bg-blue-50 text-blue-700 border border-blue-100 font-medium">
+                Gợi ý bước tiếp theo: GINA {ginaStep.nextStep}
+              </span>
+            )}
           </div>
-        )}
+        </div>
       </div>
 
       <div className="max-w-3xl mx-auto space-y-4">
@@ -193,10 +213,18 @@ const AsthmaAssessment: React.FC<AsthmaAssessmentProps> = ({
             Asthma Control Test (ACT)
           </div>
           <div className="space-y-4">
-            <div className="flex items-center justify-between gap-3 p-3 bg-slate-50 rounded-lg border border-slate-200">
-              <div className="text-sm font-semibold text-slate-700">Tổng điểm ACT</div>
-              <div className="text-sm font-bold text-slate-900">
-                {actScore ?? '—'} <span className="text-slate-400 font-medium">/ 25</span>
+            <div className="flex flex-wrap items-center justify-between gap-3 p-3 bg-slate-50 rounded-lg border border-slate-200">
+              <div>
+                <div className="text-sm font-semibold text-slate-700">Tổng điểm ACT</div>
+                <div className="text-xs text-slate-500 mt-0.5">
+                  ≥20: Kiểm soát tốt • 16–19: Kiểm soát một phần • ≤15: Không kiểm soát
+                </div>
+              </div>
+              <div className="text-right">
+                <div className="text-sm font-bold text-slate-900">
+                  {actScore ?? '—'} <span className="text-slate-400 font-medium">/ 25</span>
+                </div>
+                <div className="text-xs text-slate-500 mt-0.5">GINA hiện tại: Step {ginaStep.currentStep}</div>
               </div>
             </div>
 
