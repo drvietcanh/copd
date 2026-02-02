@@ -1,0 +1,46 @@
+═══════════════════════════════════════════════════════════
+  🚀 HƯỚNG DẪN DEPLOY NHANH
+═══════════════════════════════════════════════════════════
+
+Bạn đã login Vercel ở browser rồi, giờ chỉ cần:
+
+CÁCH 1: Deploy qua Browser (Đơn giản nhất)
+─────────────────────────────────────────────
+1. Vào: https://vercel.com/new
+2. Click "Import Git Repository" 
+3. Chọn GitHub/GitLab/Bitbucket
+4. Chọn repository (hoặc tạo mới và push code lên)
+5. Vercel tự động detect và deploy
+6. Set GEMINI_API_KEY trong Settings
+
+CÁCH 2: Deploy qua CLI (Nhanh nhất)
+─────────────────────────────────────────────
+Mở PowerShell/CMD trong thư mục project và chạy:
+
+1. Login CLI (chỉ cần làm 1 lần):
+   vercel login
+   → Mở link trong browser → Xác nhận → Nhấn ENTER
+
+2. Deploy:
+   vercel --prod
+
+3. Set GEMINI_API_KEY:
+   - Vào https://vercel.com/dashboard
+   - Chọn project → Settings → Environment Variables
+   - Add: GEMINI_API_KEY = [API key của bạn]
+   - Redeploy
+
+CÁCH 3: Dùng Script
+─────────────────────────────────────────────
+Double-click: DEPLOY_NGAY.bat
+→ Làm theo hướng dẫn trong script
+
+═══════════════════════════════════════════════════════════
+  📝 LƯU Ý
+═══════════════════════════════════════════════════════════
+
+- Build đã thành công ✅
+- Code sẵn sàng deploy ✅
+- Chỉ cần login CLI và deploy
+
+═══════════════════════════════════════════════════════════
