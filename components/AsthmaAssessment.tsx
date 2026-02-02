@@ -12,6 +12,7 @@ import { calculateFev1FvcRatio } from '../services/calculationService';
 
 interface AsthmaAssessmentProps {
   manualMode: boolean;
+  userMode: 'GP' | 'SPECIALIST';
   onOpenManual: (prompt: string) => void;
   onSetAnalysis: (analysis: string) => void;
   onSetError: (error: string | null) => void;
@@ -20,6 +21,7 @@ interface AsthmaAssessmentProps {
 
 const AsthmaAssessment: React.FC<AsthmaAssessmentProps> = ({
   manualMode,
+  userMode,
   onOpenManual,
   onSetAnalysis,
   onSetError,
@@ -108,7 +110,7 @@ const AsthmaAssessment: React.FC<AsthmaAssessmentProps> = ({
   const handleAnalyze = async () => {
     onSetError(null);
     if (manualMode) {
-      const { fullPrompt } = buildAsthmaPromptForAiStudio(data);
+      const { fullPrompt } = buildAsthmaPromptForAiStudio(data, userMode);
       onOpenManual(fullPrompt);
       return;
     }
@@ -116,13 +118,13 @@ const AsthmaAssessment: React.FC<AsthmaAssessmentProps> = ({
     onSetLoading(true);
     try {
       const { analyzeAsthmaData } = await import('../services/asthmaService');
-      const result = await analyzeAsthmaData(data);
+      const result = await analyzeAsthmaData(data, userMode);
       onSetAnalysis(result);
     } catch (e: any) {
       const msg = e instanceof Error ? e.message : 'Đã xảy ra lỗi không xác định.';
       onSetError(msg);
       if (/quota|rate limit|resource_exhausted|429|vượt quá giới hạn/i.test(msg)) {
-        const { fullPrompt } = buildAsthmaPromptForAiStudio(data);
+        const { fullPrompt } = buildAsthmaPromptForAiStudio(data, userMode);
         onOpenManual(fullPrompt);
       }
     } finally {

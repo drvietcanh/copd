@@ -181,7 +181,7 @@ VIÊM/ĐỒNG MẮC:
 `);
 };
 
-const ASTHMA_SYSTEM_PROMPT = sanitize(`
+const ASTHMA_SYSTEM_PROMPT_BASE = sanitize(`
 SYSTEM ROLE:
 Bạn là trợ lý AI hỗ trợ ra quyết định lâm sàng về Hen phế quản (Asthma).
 Mục tiêu: tóm tắt mức độ kiểm soát, nguy cơ, và gợi ý quản lý theo guideline (GINA hiện hành) theo cách thận trọng.
@@ -212,21 +212,43 @@ CẤU TRÚC PHẢN HỒI (BẮT BUỘC):
  6. Theo dõi
 `);
 
-export const buildAsthmaPromptForAiStudio = (data: AsthmaData) => {
+export const buildAsthmaPromptForAiStudio = (data: AsthmaData, userMode: 'GP' | 'SPECIALIST') => {
   const patientDescription = buildAsthmaPatientDescription(data);
-  const systemInstruction = ASTHMA_SYSTEM_PROMPT;
+
+  const modeInstruction =
+    userMode === 'GP'
+      ? sanitize(`
+CHẾ ĐỘ NGƯỜI DÙNG: BÁC SĨ ĐA KHOA (GP)
+- Ưu tiên NGÔN NGỮ ĐƠN GIẢN, tránh thuật ngữ quá chuyên sâu.
+- Tập trung mô tả:
+  [According to GINA] MỨC ĐỘ KIỂM SOÁT hen (tốt/một phần/không kiểm soát) và những yếu tố nguy cơ đợt cấp quan trọng.
+  [AI Suggestion] Gợi ý bậc điều trị GINA chính (Step 1–4) và bước tiếp theo NẾU kiểm soát chưa tốt.
+- [According to GINA] KHÔNG liệt kê chi tiết về biologics; chỉ cần nêu chung "có thể cân nhắc sinh học ở Step 5" nếu phù hợp, không nêu tên thuốc cụ thể.
+- Hạn chế đi sâu vào can thiệp chuyên sâu – luôn đặt dưới nhãn [Clinical judgment required] và nhấn mạnh vai trò chuyển chuyên khoa khi cần.`)
+      : sanitize(`
+CHẾ ĐỘ NGƯỜI DÙNG: BÁC SĨ CHUYÊN KHOA HÔ HẤP
+- Cho phép dùng THUẬT NGỮ CHUYÊN KHOA nhưng vẫn cần cấu trúc rõ ràng.
+- [According to GINA] Phân tích đầy đủ bậc điều trị GINA hiện tại (Step 1–5) và lý do nên/không nên tăng/giảm bậc.
+- [According to GINA] Nêu gợi ý PHENOTYPE:
+   • Nếu EOS ≥ 300 cells/µL hoặc có đợt cấp nhiều: gợi ý "eosinophilic asthma" (ghi rõ dưới nhãn này).
+   • Nhấn mạnh yếu tố dị ứng/atopy khi có, gợi ý hen dị ứng.
+- [AI Suggestion] Đề xuất rõ lựa chọn controller cụ thể trong mỗi Step (ICS–formoterol, ICS–LABA...) với cảnh báo an toàn.
+- [Clinical judgment required] Khi đề cập sinh học (anti-IgE, anti-IL5, anti-IL4R) hoặc phối hợp phức tạp, luôn kèm nhận định về tiêu chuẩn chọn bệnh nhân và khuyến cáo chuyển chuyên khoa nếu chưa điều trị tại trung tâm có kinh nghiệm.`);
+
+  const systemInstruction = sanitize(`${ASTHMA_SYSTEM_PROMPT_BASE}\n\n${modeInstruction}`);
   const fullPrompt = sanitize(`SYSTEM INSTRUCTION:\n${systemInstruction}\n\nPATIENT DATA:\n${patientDescription}`);
   return { systemInstruction, patientDescription, fullPrompt };
 };
 
 export const analyzeAsthmaData = async (
-  data: AsthmaData
+  data: AsthmaData,
+  userMode: 'GP' | 'SPECIALIST'
 ): Promise<string> => {
-  const { systemInstruction, patientDescription } = buildAsthmaPromptForAiStudio(data);
+  const { systemInstruction, patientDescription } = buildAsthmaPromptForAiStudio(data, userMode);
   const response = await fetch('/api/assess', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ systemInstruction, patientDescription, userMode: 'GP' }),
+    body: JSON.stringify({ systemInstruction, patientDescription, userMode }),
   });
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));

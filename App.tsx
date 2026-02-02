@@ -330,7 +330,6 @@ const App: React.FC = () => {
              </div>
 
              {/* User Mode Toggle */}
-             {disease === 'COPD' && (
              <div className="flex bg-slate-100 p-1 rounded-full border border-slate-200">
                 <button
                   onClick={() => setUserMode('GP')}
@@ -357,7 +356,6 @@ const App: React.FC = () => {
                   <span className="hidden md:inline">Chuyên khoa</span>
                 </button>
              </div>
-             )}
 
              <div className="flex bg-slate-100 p-1 rounded-lg border border-slate-200">
                 <button
@@ -424,6 +422,7 @@ const App: React.FC = () => {
           !analysis ? (
             <AsthmaAssessment
               manualMode={manualMode}
+              userMode={userMode}
               onOpenManual={openManualWorkflowWithPrompt}
               onSetAnalysis={setAnalysis}
               onSetError={setError}
