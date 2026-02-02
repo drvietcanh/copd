@@ -96,7 +96,7 @@ export const exportToPDF = async ({ patientData, analysis, timestamp, element }:
   const patientInfo = [
     `Họ và Tên: ${patientData.patientName || 'N/A'}`,
     `Tuổi: ${patientData.age || 'N/A'} | Giới tính: ${patientData.sex || 'N/A'} | BMI: ${patientData.bmi || 'N/A'} kg/m²`,
-    `Tiền sử hút thuốc: ${patientData.smokingHistory || 'N/A'} (${patientData.packYears || '0'} bao-năm)`,
+    `Tiền sử hút thuốc: ${patientData.smokingHistory || 'N/A'} (${patientData.packYears || '0'} bao thuốc-năm)`,
     `mMRC: ${patientData.mMRC || '0'} | CAT: ${patientData.catScore || 'N/A'}`,
     `Đợt cấp (12T): ${patientData.exacerbationsLast12m || '0'} | Nhập viện: ${patientData.hospitalizationsLast12m || '0'}`,
     `FEV1: ${patientData.fev1L || 'N/A'}L (${patientData.fev1Percent || 'N/A'}%) | FEV1/FVC: ${patientData.fev1FvcRatio || 'N/A'}`,

@@ -299,7 +299,7 @@ const buildPatientDescription = (data: PatientData): string => {
 
   1. NHÂN KHẨU:
   - Tuổi: ${age}, Giới: ${sex}, BMI: ${bmi}
-  - Thuốc lá: ${smokingHistory} (${packYears} bao-năm)
+  - Thuốc lá: ${smokingHistory} (${packYears} bao thuốc-năm)
 
   2. LÂM SÀNG:
   - mMRC: ${mMRC}, CAT: ${catScore}

@@ -139,7 +139,7 @@ export const validatePatientData = (data: PatientData): ValidationError[] => {
     if (!isNaN(packYears) && packYears < 0) {
       errors.push({
         field: 'packYears',
-        message: 'Số bao-năm không thể âm'
+        message: 'Số bao thuốc-năm không thể âm'
       });
     }
   }

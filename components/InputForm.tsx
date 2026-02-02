@@ -424,13 +424,13 @@ const InputForm: React.FC<InputFormProps> = ({ data, onChange, onSubmit, loading
                 </select>
               </div>
               <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-slate-700 mb-1">Số bao-năm (Pack Years)</label>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Số bao thuốc-năm (Pack Years)</label>
                 <input
                   type="number"
                   value={data.packYears}
                   onChange={(e) => onChange('packYears', e.target.value)}
                   className="w-full px-3 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none"
-                  placeholder="Tổng số bao-năm"
+                  placeholder="Tổng số bao thuốc-năm"
                 />
               </div>
             </div>
