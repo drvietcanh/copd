@@ -1,5 +1,9 @@
 {
   "name": "GOLD 2026 COPD Assistant",
   "description": "A clinical decision-support tool for COPD management based on GOLD 2026 guidelines, powered by Gemini.",
+  "branding": {
+    "owner": "drvietcanh",
+    "mobile": "0988040484"
+  },
   "requestFramePermissions": []
 }

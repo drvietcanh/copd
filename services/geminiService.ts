@@ -149,7 +149,7 @@ CẤU TRÚC PHẢN HỒI (BẮT BUỘC SỬ DỤNG CÁC TIÊU ĐỀ ĐÁNH SỐ 
 🔥 Nguy cơ đợt cấp: {Thấp / Cao}
 📈 Triệu chứng: CAT {score} / mMRC {grade}
 
-1. Ấn tượng Chẩn đoán & Kiểu hình
+1. Chẩn đoán & Kiểu hình
 (Tóm tắt bệnh cảnh. Nếu là Chuyên khoa: Phân tích sâu Phenotype. Nếu là Đa khoa: Chỉ nêu chẩn đoán sơ bộ).
 
 2. Đánh giá Mức độ & Nguy cơ (GOLD 2026)

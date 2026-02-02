@@ -11,6 +11,7 @@ import { saveAssessment, getAllAssessments, deleteAssessment } from './services/
 import { loadDraft, clearDraft, hasDraft, saveDraft, setupAutoSave } from './services/draftService';
 import { Activity, ShieldCheck, List, PlusCircle, Settings, Stethoscope, HeartPulse } from 'lucide-react';
 import ManualAiStudioModal from './components/ManualAiStudioModal';
+import metadata from './metadata.json';
 
 const App: React.FC = () => {
   const [patientData, setPatientData] = useState<PatientData>(initialPatientData);
@@ -425,6 +426,11 @@ const App: React.FC = () => {
           )
         )}
       </main>
+
+      <footer className="max-w-6xl mx-auto px-4 pt-2 pb-6 text-center text-xs text-slate-400">
+        <span className="font-medium text-slate-500">{metadata?.branding?.owner || ''}</span>
+        {metadata?.branding?.mobile ? <span> • {metadata.branding.mobile}</span> : null}
+      </footer>
     </div>
   );
 };
