@@ -12,12 +12,15 @@ import { loadDraft, clearDraft, hasDraft, saveDraft, setupAutoSave } from './ser
 import { Activity, ShieldCheck, List, PlusCircle, Settings, Stethoscope, HeartPulse } from 'lucide-react';
 import ManualAiStudioModal from './components/ManualAiStudioModal';
 import metadata from './metadata.json';
+import AsthmaAssessment from './components/AsthmaAssessment';
+import type { Disease } from './services/asthmaService';
 
 const App: React.FC = () => {
   const [patientData, setPatientData] = useState<PatientData>(initialPatientData);
   const [analysis, setAnalysis] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [disease, setDisease] = useState<Disease>('COPD');
   
   // State for History
   const [history, setHistory] = useState<AssessmentRecord[]>([]);
@@ -60,6 +63,10 @@ const App: React.FC = () => {
     const savedManual = localStorage.getItem('copd_manual_ai_studio');
     if (savedManual === '1') {
       setManualMode(true);
+    }
+    const savedDisease = localStorage.getItem('copd_selected_disease');
+    if (savedDisease === 'ASTHMA' || savedDisease === 'COPD') {
+      setDisease(savedDisease);
     }
 
     // Load draft on mount
@@ -108,6 +115,17 @@ const App: React.FC = () => {
     }
   };
 
+  const handleChangeDisease = (next: Disease) => {
+    setDisease(next);
+    localStorage.setItem('copd_selected_disease', next);
+    // Reset view + state on switch
+    setAnalysis(null);
+    setError(null);
+    setCurrentView('assessment');
+    // Clear COPD draft when switching to avoid confusion
+    clearDraft();
+  };
+
   const handleDataChange = (key: keyof PatientData, value: any) => {
     setPatientData((prev) => ({ ...prev, [key]: value }));
   };
@@ -115,6 +133,11 @@ const App: React.FC = () => {
   const openManualWorkflow = () => {
     const { fullPrompt } = buildGeminiPromptForAiStudio(patientData, userMode);
     setManualPrompt(fullPrompt);
+    setIsManualModalOpen(true);
+  };
+
+  const openManualWorkflowWithPrompt = (prompt: string) => {
+    setManualPrompt(prompt);
     setIsManualModalOpen(true);
   };
 
@@ -164,6 +187,11 @@ const App: React.FC = () => {
     setLoading(true);
     setError(null);
     try {
+      // Asthma has its own flow / form
+      if (disease === 'ASTHMA') {
+        setLoading(false);
+        return;
+      }
       if (manualMode) {
         setLoading(false);
         openManualWorkflow();
@@ -275,7 +303,34 @@ const App: React.FC = () => {
           </div>
           
           <div className="flex items-center gap-2 sm:gap-4">
+             {/* Disease Selector */}
+             <div className="flex bg-slate-100 p-1 rounded-full border border-slate-200">
+                <button
+                  onClick={() => handleChangeDisease('COPD')}
+                  className={`flex items-center gap-1.5 px-3 py-1 text-xs font-bold rounded-full transition-all ${
+                    disease === 'COPD'
+                      ? 'bg-white text-blue-600 shadow-sm'
+                      : 'text-slate-400 hover:text-slate-600'
+                  }`}
+                  title="COPD (GOLD 2026)"
+                >
+                  COPD
+                </button>
+                <button
+                  onClick={() => handleChangeDisease('ASTHMA')}
+                  className={`flex items-center gap-1.5 px-3 py-1 text-xs font-bold rounded-full transition-all ${
+                    disease === 'ASTHMA'
+                      ? 'bg-white text-purple-600 shadow-sm'
+                      : 'text-slate-400 hover:text-slate-600'
+                  }`}
+                  title="Hen phế quản (Asthma)"
+                >
+                  Asthma
+                </button>
+             </div>
+
              {/* User Mode Toggle */}
+             {disease === 'COPD' && (
              <div className="flex bg-slate-100 p-1 rounded-full border border-slate-200">
                 <button
                   onClick={() => setUserMode('GP')}
@@ -302,6 +357,7 @@ const App: React.FC = () => {
                   <span className="hidden md:inline">Chuyên khoa</span>
                 </button>
              </div>
+             )}
 
              <div className="flex bg-slate-100 p-1 rounded-lg border border-slate-200">
                 <button
@@ -313,25 +369,29 @@ const App: React.FC = () => {
                   <PlusCircle className="w-4 h-4" />
                   <span className="hidden lg:inline">Đánh giá mới</span>
                 </button>
-                <button
-                  onClick={() => setCurrentView('history')}
-                  className={`flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-md transition-all ${
-                    currentView === 'history' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'
-                  }`}
-                >
-                  <List className="w-4 h-4" />
-                  <span className="hidden lg:inline">Lịch sử ({history.length})</span>
-                </button>
-                <button
-                  onClick={() => setCurrentView('statistics')}
-                  className={`flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-md transition-all ${
-                    currentView === 'statistics' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'
-                  }`}
-                  title="Thống kê"
-                >
-                  <ShieldCheck className="w-4 h-4" />
-                  <span className="hidden lg:inline">Thống kê</span>
-                </button>
+                {disease === 'COPD' && (
+                  <>
+                    <button
+                      onClick={() => setCurrentView('history')}
+                      className={`flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-md transition-all ${
+                        currentView === 'history' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'
+                      }`}
+                    >
+                      <List className="w-4 h-4" />
+                      <span className="hidden lg:inline">Lịch sử ({history.length})</span>
+                    </button>
+                    <button
+                      onClick={() => setCurrentView('statistics')}
+                      className={`flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-md transition-all ${
+                        currentView === 'statistics' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'
+                      }`}
+                      title="Thống kê"
+                    >
+                      <ShieldCheck className="w-4 h-4" />
+                      <span className="hidden lg:inline">Thống kê</span>
+                    </button>
+                  </>
+                )}
              </div>
              
              {/* Settings Button */}
@@ -360,7 +420,23 @@ const App: React.FC = () => {
           </div>
         )}
 
-        {currentView === 'statistics' ? (
+        {disease === 'ASTHMA' ? (
+          !analysis ? (
+            <AsthmaAssessment
+              manualMode={manualMode}
+              onOpenManual={openManualWorkflowWithPrompt}
+              onSetAnalysis={setAnalysis}
+              onSetError={setError}
+              onSetLoading={setLoading}
+            />
+          ) : (
+            <AnalysisResult
+              analysis={analysis}
+              onReset={handleNewAssessment}
+              timestamp={Date.now()}
+            />
+          )
+        ) : currentView === 'statistics' ? (
           <div className="animate-fade-in">
             <div className="mb-8">
               <h2 className="text-2xl font-bold text-slate-800">Thống kê</h2>
