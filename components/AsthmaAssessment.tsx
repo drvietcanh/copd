@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { Activity, Stethoscope, FileText, AlertTriangle, Sparkles } from 'lucide-react';
-import { AsthmaData, buildAsthmaPromptForAiStudio, initialAsthmaData } from '../services/asthmaService';
+import { AsthmaData, buildAsthmaPromptForAiStudio, computeActScore, initialAsthmaData } from '../services/asthmaService';
 import { Gender } from '../types';
 
 interface AsthmaAssessmentProps {
@@ -25,12 +25,76 @@ const AsthmaAssessment: React.FC<AsthmaAssessmentProps> = ({
   };
 
   const quickSummary = useMemo(() => {
-    const act = parseInt(data.actScore || '0', 10);
+    const act = computeActScore(data);
     if (!act) return null;
     if (act >= 20) return { label: 'Kiểm soát tốt (ACT ≥ 20)', tone: 'emerald' as const };
     if (act >= 16) return { label: 'Kiểm soát một phần (ACT 16–19)', tone: 'amber' as const };
     return { label: 'Kiểm soát kém (ACT ≤ 15)', tone: 'red' as const };
-  }, [data.actScore]);
+  }, [data]);
+
+  const actScore = useMemo(() => computeActScore(data), [data]);
+
+  const ACT_QUESTIONS: Array<{
+    key: keyof AsthmaData;
+    title: string;
+    options: Array<{ score: number; label: string }>;
+  }> = [
+    {
+      key: 'actQ1',
+      title: '1) Trong 4 tuần qua, hen ảnh hưởng đến hoạt động hằng ngày của bạn mức nào?',
+      options: [
+        { score: 5, label: 'Không ảnh hưởng' },
+        { score: 4, label: 'Ảnh hưởng rất ít' },
+        { score: 3, label: 'Ảnh hưởng một phần' },
+        { score: 2, label: 'Ảnh hưởng nhiều' },
+        { score: 1, label: 'Ảnh hưởng rất nhiều / không làm được' },
+      ],
+    },
+    {
+      key: 'actQ2',
+      title: '2) Trong 4 tuần qua, bạn bị khó thở bao lâu một lần?',
+      options: [
+        { score: 5, label: 'Không có' },
+        { score: 4, label: '1–2 lần/tuần' },
+        { score: 3, label: '3–6 lần/tuần' },
+        { score: 2, label: 'Mỗi ngày 1 lần' },
+        { score: 1, label: 'Nhiều lần mỗi ngày' },
+      ],
+    },
+    {
+      key: 'actQ3',
+      title: '3) Trong 4 tuần qua, bạn thức giấc ban đêm/khó ngủ do triệu chứng hen bao lâu một lần?',
+      options: [
+        { score: 5, label: 'Không có' },
+        { score: 4, label: '1–2 lần' },
+        { score: 3, label: '1 lần/tuần' },
+        { score: 2, label: '2–3 lần/tuần' },
+        { score: 1, label: '≥4 lần/tuần' },
+      ],
+    },
+    {
+      key: 'actQ4',
+      title: '4) Trong 4 tuần qua, bạn dùng thuốc cắt cơn (SABA/reliever) bao lâu một lần?',
+      options: [
+        { score: 5, label: 'Không dùng' },
+        { score: 4, label: '≤1 lần/tuần' },
+        { score: 3, label: '2–3 lần/tuần' },
+        { score: 2, label: '1 lần/ngày' },
+        { score: 1, label: 'Nhiều lần/ngày' },
+      ],
+    },
+    {
+      key: 'actQ5',
+      title: '5) Bạn tự đánh giá mức độ kiểm soát hen của mình trong 4 tuần qua như thế nào?',
+      options: [
+        { score: 5, label: 'Kiểm soát hoàn toàn' },
+        { score: 4, label: 'Kiểm soát tốt' },
+        { score: 3, label: 'Kiểm soát một phần' },
+        { score: 2, label: 'Kiểm soát kém' },
+        { score: 1, label: 'Không kiểm soát' },
+      ],
+    },
+  ];
 
   const handleAnalyze = async () => {
     onSetError(null);
@@ -125,21 +189,56 @@ const AsthmaAssessment: React.FC<AsthmaAssessmentProps> = ({
         <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-6">
           <div className="flex items-center gap-2 font-bold text-slate-800 text-lg mb-4">
             <Activity className="w-5 h-5 text-blue-600" />
-            Kiểm soát triệu chứng
+            Asthma Control Test (ACT)
+          </div>
+          <div className="space-y-4">
+            <div className="flex items-center justify-between gap-3 p-3 bg-slate-50 rounded-lg border border-slate-200">
+              <div className="text-sm font-semibold text-slate-700">Tổng điểm ACT</div>
+              <div className="text-sm font-bold text-slate-900">
+                {actScore ?? '—'} <span className="text-slate-400 font-medium">/ 25</span>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              {ACT_QUESTIONS.map((q) => (
+                <div key={q.key} className="p-4 bg-white border border-slate-200 rounded-lg">
+                  <div className="text-sm font-bold text-slate-800 mb-3">{q.title}</div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                    {q.options.map((opt) => {
+                      const selected = (data[q.key] as string) === String(opt.score);
+                      return (
+                        <button
+                          key={opt.score}
+                          type="button"
+                          onClick={() => handleChange(q.key, String(opt.score))}
+                          className={`text-left px-3 py-2 rounded-lg border text-sm font-medium transition-all ${
+                            selected
+                              ? 'bg-blue-600 text-white border-blue-600 shadow-sm'
+                              : 'bg-white text-slate-700 border-slate-200 hover:border-blue-300 hover:bg-blue-50'
+                          }`}
+                        >
+                          <span className={`inline-flex items-center justify-center w-6 h-6 rounded-md mr-2 ${
+                            selected ? 'bg-white/20' : 'bg-slate-100 text-slate-600'
+                          }`}>
+                            {opt.score}
+                          </span>
+                          {opt.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-6">
+          <div className="flex items-center gap-2 font-bold text-slate-800 text-lg mb-4">
+            <Activity className="w-5 h-5 text-blue-600" />
+            Checklist triệu chứng đơn giản
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-slate-700 mb-1">ACT (5–25)</label>
-              <input
-                type="number"
-                min="5"
-                max="25"
-                value={data.actScore}
-                onChange={(e) => handleChange('actScore', e.target.value)}
-                className="w-full px-3 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none"
-                placeholder="Ví dụ: 21"
-              />
-            </div>
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">Triệu chứng ban ngày / tuần</label>
               <input

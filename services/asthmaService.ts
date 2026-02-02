@@ -8,7 +8,11 @@ export interface AsthmaData {
   sex: Gender;
 
   // Control & symptoms
-  actScore: string; // 5-25
+  actQ1: string; // 1-5
+  actQ2: string; // 1-5
+  actQ3: string; // 1-5
+  actQ4: string; // 1-5
+  actQ5: string; // 1-5
   daytimeSymptomsPerWeek: string; // number
   nightAwakeningsPerMonth: string; // number
   relieverUsePerWeek: string; // number
@@ -36,7 +40,11 @@ export const initialAsthmaData: AsthmaData = {
   age: '',
   sex: Gender.MALE,
 
-  actScore: '',
+  actQ1: '',
+  actQ2: '',
+  actQ3: '',
+  actQ4: '',
+  actQ5: '',
   daytimeSymptomsPerWeek: '',
   nightAwakeningsPerMonth: '',
   relieverUsePerWeek: '',
@@ -58,14 +66,24 @@ export const initialAsthmaData: AsthmaData = {
 
 const sanitize = (s: any) => String(s ?? '').replace(/\r\n/g, '\n').replace(/\r/g, '\n').trim();
 
+export const computeActScore = (data: AsthmaData): number | null => {
+  const qs = [data.actQ1, data.actQ2, data.actQ3, data.actQ4, data.actQ5].map((v) => parseInt(v || '', 10));
+  if (qs.some((n) => isNaN(n))) return null;
+  const sum = qs.reduce((a, b) => a + b, 0);
+  // ACT total should be 5..25 (each 1..5)
+  if (sum < 5 || sum > 25) return null;
+  return sum;
+};
+
 const buildAsthmaPatientDescription = (data: AsthmaData) => {
+  const actScore = computeActScore(data);
   return sanitize(`
 DỮ LIỆU BỆNH NHÂN (HEN PHẾ QUẢN):
 - Họ tên/Mã: ${sanitize(data.patientName || 'N/A')}
 - Tuổi: ${sanitize(data.age || 'N/A')}, Giới: ${sanitize(data.sex || 'N/A')}
 
 KIỂM SOÁT TRIỆU CHỨNG:
-- ACT: ${sanitize(data.actScore || 'N/A')} (5–25)
+- ACT: ${actScore ?? 'N/A'} (5–25)
 - Triệu chứng ban ngày/tuần: ${sanitize(data.daytimeSymptomsPerWeek || 'N/A')}
 - Thức giấc ban đêm/tháng: ${sanitize(data.nightAwakeningsPerMonth || 'N/A')}
 - Dùng thuốc cắt cơn/tuần: ${sanitize(data.relieverUsePerWeek || 'N/A')}
