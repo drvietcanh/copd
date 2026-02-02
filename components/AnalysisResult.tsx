@@ -1,7 +1,8 @@
-import React, { useRef, useState } from 'react';
+import React, { useMemo, useRef, useState } from 'react';
 import { AlertTriangle, CheckCircle, Info, FileText, Activity, ShieldAlert, Stethoscope, ClipboardList, Eye, Zap, Copy, Check, Download, Printer } from 'lucide-react';
 import { PatientData } from '../types';
 import { exportToPDF } from '../services/pdfService';
+import { detectACO } from '../services/goldClassificationService';
 
 interface AnalysisResultProps {
   analysis: string;
@@ -39,6 +40,34 @@ const AnalysisResult: React.FC<AnalysisResultProps> = ({ analysis, onReset, pati
   const handlePrint = () => {
     window.print();
   };
+
+  const acoInfo = useMemo(() => {
+    if (!patientData) return null;
+
+    const fev1Fvc = parseFloat(patientData.fev1FvcRatio || '');
+    const hasSpirometry =
+      !!patientData.fev1L?.trim() &&
+      !!patientData.fvcL?.trim() &&
+      !!patientData.fev1FvcRatio?.trim();
+
+    const copdConfirmed = hasSpirometry && !Number.isNaN(fev1Fvc) && fev1Fvc > 0 && fev1Fvc < 0.7;
+    if (!copdConfirmed) return null;
+
+    const eos = parseFloat(patientData.eosinophils || '');
+    const reversible = !!patientData.postBdReversibility;
+    const historyAsthmaAllergy = /hen|asthma|dị ứng|allergy/i.test(patientData.comorbidities || '');
+
+    const result = detectACO({
+      copdConfirmed,
+      bronchodilatorReversibility: reversible,
+      bloodEosinophils: Number.isNaN(eos) ? 0 : eos,
+      historyOfAsthmaOrAllergy: historyAsthmaAllergy,
+    });
+
+    if (!result.acoSuspected) return null;
+
+    return result;
+  }, [patientData]);
   // Parser updated for numbered sections (e.g., "0. Summary", "1. Title")
   const parseSections = (text: string) => {
     const sections: Record<string, string> = {};
@@ -128,6 +157,25 @@ const AnalysisResult: React.FC<AnalysisResultProps> = ({ analysis, onReset, pati
             </button>
           </div>
         </div>
+
+        {acoInfo && (
+          <div className="mb-5 p-4 rounded-xl border border-amber-200 bg-amber-50/80 text-amber-900">
+            <div className="flex items-center gap-2 font-semibold mb-1">
+              <AlertTriangle className="w-4 h-4 text-amber-600" />
+              <span>⚠️ COPD with features of asthma (ACO suspected)</span>
+            </div>
+            <div className="text-xs space-y-1">
+              {acoInfo.reasons && acoInfo.reasons.length > 0 && (
+                <p>
+                  Các yếu tố gợi ý bao gồm: {acoInfo.reasons.join('; ')}.
+                </p>
+              )}
+              <p className="italic">
+                This is not a separate diagnosis but a clinical overlap recognized in GINA and GOLD.
+              </p>
+            </div>
+          </div>
+        )}
 
         {sectionKeys.length === 0 ? (
           // Fallback if regex doesn't match strict format
