@@ -289,7 +289,7 @@ export default async function handler(
       
       // Check for specific error types
       if (errMsg.includes('API Key không hợp lệ') || errMsg.includes('API_KEY') || lastError?.status === 401) {
-        errorMessage = 'API Key không hợp lệ. Vui lòng kiểm tra lại GEMINI_API_KEY trên Vercel.';
+        errorMessage = 'API Key không hợp lệ. Vui lòng kiểm tra lại biến môi trường GEMINI_API_KEY trên server.';
         statusCode = 401;
       } else if (errMsg.includes('QUOTA') || errMsg.includes('429') || lastError?.status === 429) {
         errorMessage = 'Đã vượt quá giới hạn sử dụng. Vui lòng thử lại sau vài phút hoặc kiểm tra quota API Key.';

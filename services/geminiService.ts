@@ -156,6 +156,11 @@ CẤU TRÚC PHẢN HỒI (BẮT BUỘC SỬ DỤNG CÁC TIÊU ĐỀ ĐÁNH SỐ 
 (Phân nhóm GOLD A/B/E, mức độ tắc nghẽn).
 
 QUY TẮC PHÂN NHÓM GOLD 2026 (BẮT BUỘC TUÂN THỦ):
+- ĐIỀU KIỆN XÁC NHẬN COPD (BẮT BUỘC):
+  * Nếu FEV1/FVC ≥ 0.70 (sau giãn phế quản nếu có): CHƯA ĐỦ TIÊU CHUẨN CHẨN ĐOÁN COPD theo GOLD.
+  * Khi chưa đủ tiêu chuẩn COPD: KHÔNG gán nhãn GOLD A/B/E hoặc GOLD 1–4 như chẩn đoán xác định.
+    Thay vào đó: nêu "chưa đủ tiêu chuẩn COPD", gợi ý đánh giá lại (spirometry sau BD, loại trừ hen/suy tim/béo phì/giãn phế quản...) và kết luận phải dựa đánh giá lâm sàng.
+
 - Mức độ tắc nghẽn (GOLD 1-4):
   * GOLD 1 (Nhẹ): FEV1% ≥ 80%
   * GOLD 2 (Trung bình): 50% ≤ FEV1% < 80%

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { AlertTriangle, CheckCircle, Info, FileText, Activity, ShieldAlert, Stethoscope, ClipboardList, Eye, Zap, Copy, Check, Download, Printer } from 'lucide-react';
 import { PatientData } from '../types';
 import { exportToPDF } from '../services/pdfService';
@@ -12,6 +12,7 @@ interface AnalysisResultProps {
 
 const AnalysisResult: React.FC<AnalysisResultProps> = ({ analysis, onReset, patientData, timestamp }) => {
   const [copied, setCopied] = useState(false);
+  const pdfRef = useRef<HTMLDivElement | null>(null);
 
   const handleCopy = async () => {
     try {
@@ -27,12 +28,12 @@ const AnalysisResult: React.FC<AnalysisResultProps> = ({ analysis, onReset, pati
     }
   };
 
-  const handleExportPDF = () => {
+  const handleExportPDF = async () => {
     if (!patientData) {
       alert('Không có dữ liệu bệnh nhân để xuất PDF.');
       return;
     }
-    exportToPDF({ patientData, analysis, timestamp });
+    await exportToPDF({ patientData, analysis, timestamp, element: pdfRef.current });
   };
 
   const handlePrint = () => {
@@ -75,7 +76,7 @@ const AnalysisResult: React.FC<AnalysisResultProps> = ({ analysis, onReset, pati
 
   return (
     <div className="max-w-4xl mx-auto space-y-6 animate-fade-in">
-      <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+      <div ref={pdfRef} className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-2xl font-bold text-slate-800 flex items-center gap-2">
             <Activity className="w-6 h-6 text-blue-600" />

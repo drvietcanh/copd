@@ -1,13 +1,64 @@
 import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 import { PatientData } from '../types';
 
 interface ExportOptions {
   patientData: PatientData;
   analysis: string;
   timestamp?: number;
+  element?: HTMLElement | null;
 }
 
-export const exportToPDF = ({ patientData, analysis, timestamp }: ExportOptions): void => {
+export const exportToPDF = async ({ patientData, analysis, timestamp, element }: ExportOptions): Promise<void> => {
+  // If a DOM element is provided, render it to canvas to preserve Vietnamese text
+  if (element) {
+    const canvas = await html2canvas(element, {
+      scale: Math.min(2, window.devicePixelRatio || 1),
+      useCORS: true,
+      backgroundColor: '#ffffff',
+    });
+
+    const imgData = canvas.toDataURL('image/png');
+    const pdf = new jsPDF('p', 'mm', 'a4');
+    const pageWidth = pdf.internal.pageSize.getWidth();
+    const pageHeight = pdf.internal.pageSize.getHeight();
+
+    // Fit image to page width
+    const imgWidth = pageWidth;
+    const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+    let heightLeft = imgHeight;
+    let position = 0;
+
+    pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+    heightLeft -= pageHeight;
+
+    while (heightLeft > 0) {
+      pdf.addPage();
+      position = heightLeft - imgHeight;
+      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+      heightLeft -= pageHeight;
+    }
+
+    // Footer (timestamp + disclaimer) — add simple overlay on each page
+    const totalPages = pdf.getNumberOfPages();
+    const dateStr = timestamp
+      ? new Date(timestamp).toLocaleString('vi-VN')
+      : new Date().toLocaleString('vi-VN');
+
+    for (let i = 1; i <= totalPages; i++) {
+      pdf.setPage(i);
+      pdf.setFontSize(8);
+      pdf.setTextColor(128, 128, 128);
+      pdf.text(`Generated: ${dateStr} | Page ${i} of ${totalPages}`, pageWidth / 2, pageHeight - 10, { align: 'center' });
+      pdf.text('Hệ thống hỗ trợ ra quyết định lâm sàng - Không thay thế chẩn đoán của bác sĩ', pageWidth / 2, pageHeight - 5, { align: 'center' });
+    }
+
+    const fileName = `COPD_Assessment_${patientData.patientName || 'Patient'}_${Date.now()}.pdf`;
+    pdf.save(fileName);
+    return;
+  }
+
   const doc = new jsPDF();
   const pageWidth = doc.internal.pageSize.getWidth();
   const pageHeight = doc.internal.pageSize.getHeight();
