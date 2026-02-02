@@ -51,7 +51,6 @@ export const exportToPDF = async ({ patientData, analysis, timestamp, element }:
       pdf.setFontSize(8);
       pdf.setTextColor(128, 128, 128);
       pdf.text(`Generated: ${dateStr} | Page ${i} of ${totalPages}`, pageWidth / 2, pageHeight - 10, { align: 'center' });
-      pdf.text('Hệ thống hỗ trợ ra quyết định lâm sàng - Không thay thế chẩn đoán của bác sĩ', pageWidth / 2, pageHeight - 5, { align: 'center' });
     }
 
     const fileName = `COPD_Assessment_${patientData.patientName || 'Patient'}_${Date.now()}.pdf`;
@@ -161,12 +160,6 @@ export const exportToPDF = async ({ patientData, analysis, timestamp, element }:
       `Generated: ${dateStr} | Page ${i} of ${totalPages}`,
       pageWidth / 2,
       pageHeight - 10,
-      { align: 'center' }
-    );
-    doc.text(
-      'Hệ thống hỗ trợ ra quyết định lâm sàng - Không thay thế chẩn đoán của bác sĩ',
-      pageWidth / 2,
-      pageHeight - 5,
       { align: 'center' }
     );
   }
