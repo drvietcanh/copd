@@ -213,6 +213,16 @@ const App: React.FC = () => {
     clearDraft();
   };
 
+  const handleNewAssessment = () => {
+    // "Đánh giá mới" should always reset to a fresh form
+    setAnalysis(null);
+    setError(null);
+    setPatientData(initialPatientData);
+    setCurrentView('assessment');
+    clearDraft();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   const handleSelectRecord = (record: AssessmentRecord) => {
     setPatientData(record.data);
     setAnalysis(record.analysis);
@@ -253,7 +263,7 @@ const App: React.FC = () => {
       {/* Header */}
       <header className="bg-white border-b border-slate-200 sticky top-0 z-10 shadow-sm">
         <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-3 cursor-pointer" onClick={() => setCurrentView('assessment')}>
+          <div className="flex items-center gap-3 cursor-pointer" onClick={handleNewAssessment}>
             <div className="bg-blue-600 p-2 rounded-lg text-white">
               <Activity className="w-6 h-6" />
             </div>
@@ -294,7 +304,7 @@ const App: React.FC = () => {
 
              <div className="flex bg-slate-100 p-1 rounded-lg border border-slate-200">
                 <button
-                  onClick={() => setCurrentView('assessment')}
+                  onClick={handleNewAssessment}
                   className={`flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-md transition-all ${
                     currentView === 'assessment' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'
                   }`}
