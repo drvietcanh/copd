@@ -1,5 +1,6 @@
 import { GoogleGenAI } from "@google/genai";
 import { PatientData } from "../types";
+import { detectACO } from "./goldClassificationService";
 
 type GeminiHttpErrorPayload =
   | {
@@ -236,10 +237,19 @@ const getAnalysisContext = (data: PatientData) => {
   if (hasSpirometry && hasHistory) copdConfidence = 'high';
   else if (hasSpirometry || hasHistory) copdConfidence = 'moderate';
 
-  // ACO Suspicion Check (Asthma-COPD Overlap features)
+  // ACO Suspicion Check (Asthma–COPD Overlap features)
   const eos = parseFloatSafe(data.eosinophils);
   const isReversible = data.postBdReversibility;
-  const acoSuspicion = (isReversible || eos >= 300);
+  const ratio = parseFloatSafe(data.fev1FvcRatio);
+  const copdConfirmed = hasSpirometry && ratio > 0 && ratio < 0.7;
+  const historyAsthmaAllergy = /hen|asthma|dị ứng|allergy/i.test(data.comorbidities || "");
+
+  const acoResult = detectACO({
+    copdConfirmed,
+    bronchodilatorReversibility: isReversible,
+    bloodEosinophils: eos,
+    historyOfAsthmaOrAllergy: historyAsthmaAllergy,
+  });
 
   // 3. Phenotypes
   const phenotype = {
@@ -262,7 +272,11 @@ const getAnalysisContext = (data: PatientData) => {
   return {
     reportMode,
     dataQuality: { hasSpirometry, hasHistory, missingKeys },
-    clinicalCertainty: { copdConfidence, acoSuspicion },
+    clinicalCertainty: {
+      copdConfidence,
+      acoSuspicion: acoResult.acoSuspected,
+      acoReasons: acoResult.reasons ?? [],
+    },
     phenotype
   };
 };
@@ -398,7 +412,11 @@ const buildSystemInstruction = (
 
   // Phenotype logic
   if (context.clinicalCertainty.acoSuspicion) {
-    adaptiveInstruction += `\n- [QUAN TRỌNG - ACO] Có yếu tố gợi ý ACO (Reversibility/High EOS). Xem xét vai trò ICS.`;
+    adaptiveInstruction += `\n- [QUAN TRỌNG - ACO] COPD có các đặc điểm gợi ý chồng lấp hen–COPD (Asthma–COPD Overlap). Đây KHÔNG phải chẩn đoán xác định; cần bác sĩ đánh giá lâm sàng và so sánh với khuyến cáo hiện hành.`;
+    if (context.clinicalCertainty.acoReasons && context.clinicalCertainty.acoReasons.length > 0) {
+      adaptiveInstruction += `\n  Các yếu tố gợi ý bao gồm: ${context.clinicalCertainty.acoReasons.join('; ')}.`;
+    }
+    adaptiveInstruction += `\n  [Clinical judgment required] Cân nhắc vai trò ICS và/hoặc chiến lược điều trị phù hợp khi có yếu tố hen, theo các khuyến cáo hiện hành.`;
   }
 
   if (context.phenotype.hasEmphysema) {

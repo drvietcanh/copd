@@ -133,3 +133,54 @@ export const getGOLDClassification = (data: PatientData): GOLDClassification => 
     hospitalizations: parseFloat(data.hospitalizationsLast12m || '0'),
   };
 };
+
+export interface ACODetectionResult {
+  acoSuspected: boolean;
+  reasons?: string[];
+}
+
+/**
+ * Detects features suggestive of Asthma–COPD Overlap (ACO).
+ * This is a heuristic flag only, NOT a definitive diagnosis.
+ */
+export const detectACO = (options: {
+  copdConfirmed: boolean;
+  bronchodilatorReversibility: boolean;
+  bloodEosinophils: number;
+  historyOfAsthmaOrAllergy: boolean;
+}): ACODetectionResult => {
+  const { copdConfirmed, bronchodilatorReversibility, bloodEosinophils, historyOfAsthmaOrAllergy } = options;
+
+  if (!copdConfirmed) {
+    return { acoSuspected: false };
+  }
+
+  const reasons: string[] = [];
+
+  if (bronchodilatorReversibility) {
+    reasons.push(
+      'Có đáp ứng giãn phế quản rõ, gợi ý thành phần hen trong bệnh cảnh tắc nghẽn đường thở.'
+    );
+  }
+
+  if (!Number.isNaN(bloodEosinophils) && bloodEosinophils >= 300) {
+    reasons.push(
+      'Eosinophil máu ≥ 300 cells/µL, thường liên quan đến phenotype viêm eosinophilic và đáp ứng tốt hơn với ICS.'
+    );
+  }
+
+  if (historyOfAsthmaOrAllergy) {
+    reasons.push(
+      'Tiền sử hen hoặc bệnh lý dị ứng, làm tăng khả năng bệnh nhân có đặc điểm chồng lấp hen–COPD.'
+    );
+  }
+
+  if (reasons.length === 0) {
+    return { acoSuspected: false };
+  }
+
+  return {
+    acoSuspected: true,
+    reasons,
+  };
+};
